@@ -22,6 +22,7 @@
 #include <string.h>
 
 char *trim(char *);
+void clrscr();
 
 // Function to read user input and
 // redirect them to the proper functions
@@ -32,6 +33,22 @@ void read_cmd(DIR *dir, char *cmd) {
   // Simple CMD command
   if (strcmp(cmdtok, "cmd") == 0) {
     printf("Microsoft Windows [Version 10.0.15063]\n(c) 2017 Microsoft Corporation. All rights reserved.\n\n");
+  } else if (strcmp(cmdtok, "cls") == 0) {
+    clrscr();
+  } else if (strcmp(cmdtok, "cd") == 0) {
+    char *cmd_dest = cmd + strlen(cmdtok) + 1;
+
+    char *dest_null = strtok(NULL, " ");
+
+    if (dest_null == NULL) {
+      char cwd[1024];
+      getcwd(cwd, sizeof(cwd));
+      printf("%s\n", cwd);
+    } else if (chdir(trim(cmd_dest)) != 0) {
+        printf("The system cannot find the path specified.\n");
+    }
+  } else if (strcmp(cmdtok, "cd..") == 0) { // special case
+    chdir("..");
   }
 
 }
@@ -39,9 +56,6 @@ void read_cmd(DIR *dir, char *cmd) {
 // Function to trim unnecessary spaces
 char *trim(char *str) {
   char *lastChar;
-  printf(str);
-
-
 
   // Trim preceding spaces
   while(isspace((unsigned char) *str)) {
@@ -62,6 +76,10 @@ char *trim(char *str) {
   *(lastChar+1) = 0;
 
   return str;
+}
+
+void clrscr() {
+    system("@cls||clear");
 }
 
 
