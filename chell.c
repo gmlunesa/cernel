@@ -61,6 +61,12 @@ void read_cmd(DIR *dir, char *cmd) {
     chdir("..");
   } else if (strcmp(cmdtok, "dir") == 0) {
     dir_cmd(dir);
+  } else if (strcmp(cmdtok, "chdir") == 0) {
+
+    char *cmd_dest = cmd + strlen(cmdtok) + 1;
+    if (chdir(trim(cmd_dest)) != 0) {
+      printf("The system cannot find the path specified.\n");
+    }
   }
 
 }
