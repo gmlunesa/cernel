@@ -21,56 +21,73 @@
 #include <dirent.h>
 #include <string.h>
 
-int main(void) {
-    char cwd[1024];
-    char input[1024];
-
-    DIR *dir;
-
-    while (1) {
-        if (getcwd(cwd, sizeof(cwd)) != NULL) {
-            printf("%s>", cwd);
-            fflush(stdin);
-            scanf("%[^\n]", input);
-            printf("\n");
-        } else {
-            perror("Shell does not recognize that command. Please try again.");
-            break;
-        }
-    }
-
-    return(0);
-}
+char *trim(char *);
 
 // Function to read user input and
 // redirect them to the proper functions
 void read_cmd(DIR *dir, char *cmd) {
+  cmd = trim(cmd);
+  char *cmdtok = strtok (cmd, " ");
 
+  // Simple CMD command
+  if (strcmp(cmdtok, "cmd") == 0) {
+    printf("Microsoft Windows [Version 10.0.15063]\n(c) 2017 Microsoft Corporation. All rights reserved.\n\n");
+  }
 
 }
 
 // Function to trim unnecessary spaces
 char *trim(char *str) {
-    char *lastChar;
+  char *lastChar;
+  printf(str);
 
-    if (*str == 0) {
-      return str;
-    }
 
-    // Trim preceding spaces
-    while(isspace((unsigned char) *str)) {
-      str++;
-    }
 
-    // Trim proceeding spaces
-    lastChar = str + strlen(str) - 1;
-    while(lastChar > str && isspace((unsigned char)*lastChar)) {
-      lastChar--;
-    }
+  // Trim preceding spaces
+  while(isspace((unsigned char) *str)) {
+    str++;
+  }
 
-    // Setting a new null char terminator
-    *(lastChar+1) = 0;
-
+  if (*str == 0) {
     return str;
+  }
+
+  // Trim proceeding spaces
+  lastChar = str + strlen(str) - 1;
+  while(lastChar > str && isspace((unsigned char)*lastChar)) {
+    lastChar--;
+  }
+
+  // Setting a new null char terminator
+  *(lastChar+1) = 0;
+
+  return str;
 }
 
+
+int main(void) {
+  char cwd[1024];
+  char input[1024];
+
+  DIR *dir;
+
+  while (1) {
+      if (getcwd(cwd, sizeof(cwd)) != NULL) {
+          input[0] != '\0';
+          printf("%s>", cwd);
+          fflush(stdin);
+          scanf("%[^\n]", input);
+
+          if(input[0] != '\0'){
+              read_cmd(dir, input);
+          }
+
+          printf("\n");
+      } else {
+          perror("Error: ");
+          break;
+      }
+  }
+
+  return(0);
+}
