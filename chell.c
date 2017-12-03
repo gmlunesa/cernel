@@ -116,7 +116,6 @@ void dir_cmd(DIR *dir) {
       if(S_ISDIR(attr.st_mode)) {
         printf("\t\t  <DIR>\t\t");
       } else {
-
         int count = (int)log10(attr.st_size) + 1;
         count += (count-1)/3; // adjust with the spaces and commas
 
@@ -125,48 +124,16 @@ void dir_cmd(DIR *dir) {
             printf(" ");
         }
         formatInteger((unsigned)attr.st_size);
-        printf(" ");
+        printf("\t");
       }
 
-      printf("%s\n", dirnt->d_name);
+      printf("\t%s\n", dirnt->d_name);
+
       dirnt = readdir(dir);
     }
     closedir(dir);
   }
   else perror("Error: ");
-}
-
-void dir_cm(DIR *dir) {
-    struct dirent *dirnt;
-    dir = opendir(".");
-    struct stat attr;
-    char buff[20];
-    struct tm * time_info;
-    int file_count = 0, dir_count = 0;
-    if (dir) {
-        while ((dirnt = readdir(dir)) != NULL) {
-            stat(dirnt->d_name, &attr);
-            time_info = localtime (&attr.st_mtime);
-            strftime(buff, sizeof(buff), "%m/%d/%Y %I:%M %p", time_info);
-            printf("%s", buff);
-            if (S_ISDIR(attr.st_mode))
-                printf("    <DIR>          ");
-            else {
-                int count = (int)log10(attr.st_size) + 1;
-                count += (count-1)/3;
-
-                int i=0;
-                for (; i < 18-count; i++) {
-                    printf(" ");
-                }
-                formatInteger((unsigned)attr.st_size);
-                printf(" ");
-            }
-            printf("%s\n", dirnt->d_name);
-        }
-        closedir(dir);
-    }
-    else perror("getcwd() error");
 }
 
 void formatInteger (unsigned n) {
