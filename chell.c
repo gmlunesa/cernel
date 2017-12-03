@@ -21,8 +21,18 @@
 #include <dirent.h>
 #include <string.h>
 
+#include <stdlib.h>
+#include <sys/stat.h>
+
+#include <math.h>
+#include <time.h>
+
 char *trim(char *);
-void clrscr();
+void cls_cmd();
+void formatInteger(unsigned n);
+void formatIntegerFigures(unsigned n);
+void dir_cmd(DIR *dir);
+
 
 // Function to read user input and
 // redirect them to the proper functions
@@ -34,7 +44,7 @@ void read_cmd(DIR *dir, char *cmd) {
   if (strcmp(cmdtok, "cmd") == 0) {
     printf("Microsoft Windows [Version 10.0.15063]\n(c) 2017 Microsoft Corporation. All rights reserved.\n\n");
   } else if (strcmp(cmdtok, "cls") == 0) {
-    clrscr();
+    cls_cmd();
   } else if (strcmp(cmdtok, "cd") == 0) {
     char *cmd_dest = cmd + strlen(cmdtok) + 1;
 
@@ -49,6 +59,8 @@ void read_cmd(DIR *dir, char *cmd) {
     }
   } else if (strcmp(cmdtok, "cd..") == 0) { // special case
     chdir("..");
+  } else if (strcmp(cmdtok, "dir") == 0) {
+    dir_cmd(dir);
   }
 
 }
@@ -78,10 +90,106 @@ char *trim(char *str) {
   return str;
 }
 
-void clrscr() {
+void cls_cmd() {
     system("@cls||clear");
 }
 
+void dir_cmd(DIR *dir) {
+  struct dirent *dirnt;
+  dir = opendir(".");
+
+  struct stat attr;
+  char buff[20];
+  struct tm *time_info;
+
+  int file_count = 0;
+  int dir_count = 0;
+
+  if (dir) {
+    dirnt = readdir(dir);
+    while (dirnt != NULL) {
+      stat(dirnt->d_name, &attr);
+      time_info = localtime(&attr.st_mtime);
+      strftime(buff, sizeof(buff), "%m/%d/%Y %I:%M %p", time_info);
+      printf(buff);
+
+      if(S_ISDIR(attr.st_mode)) {
+        printf("\t\t  <DIR>\t\t");
+      } else {
+
+        int count = (int)log10(attr.st_size) + 1;
+        count += (count-1)/3; // adjust with the spaces and commas
+
+        int i = 0;
+        for (; i < 20-count; i++) {
+            printf(" ");
+        }
+        formatInteger((unsigned)attr.st_size);
+        printf(" ");
+      }
+
+      printf("%s\n", dirnt->d_name);
+      dirnt = readdir(dir);
+    }
+    closedir(dir);
+  }
+  else perror("Error: ");
+}
+
+void dir_cm(DIR *dir) {
+    struct dirent *dirnt;
+    dir = opendir(".");
+    struct stat attr;
+    char buff[20];
+    struct tm * time_info;
+    int file_count = 0, dir_count = 0;
+    if (dir) {
+        while ((dirnt = readdir(dir)) != NULL) {
+            stat(dirnt->d_name, &attr);
+            time_info = localtime (&attr.st_mtime);
+            strftime(buff, sizeof(buff), "%m/%d/%Y %I:%M %p", time_info);
+            printf("%s", buff);
+            if (S_ISDIR(attr.st_mode))
+                printf("    <DIR>          ");
+            else {
+                int count = (int)log10(attr.st_size) + 1;
+                count += (count-1)/3;
+
+                int i=0;
+                for (; i < 18-count; i++) {
+                    printf(" ");
+                }
+                formatInteger((unsigned)attr.st_size);
+                printf(" ");
+            }
+            printf("%s\n", dirnt->d_name);
+        }
+        closedir(dir);
+    }
+    else perror("getcwd() error");
+}
+
+void formatInteger (unsigned n) {
+  // Negative number formatting
+  if (n < 0) {
+      printf ("-");
+      n = -n;
+  }
+
+  formatIntegerFigures(n);
+
+}
+
+void formatIntegerFigures (unsigned n) {
+  // Recursive implementation for numbers more than 999
+  if (n < 1000) {
+    printf("%d", n);
+    return;
+  }
+
+  formatIntegerFigures(n/1000);
+  printf(",%03d", n%1000);
+}
 
 int main(void) {
   char cwd[1024];
