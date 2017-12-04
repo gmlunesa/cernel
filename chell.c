@@ -36,6 +36,8 @@ void dir_cmd(DIR *dir);
 void mkdir_cmd(char *folder);
 void time_cmd(char* cmd);
 void date_cmd(char *cmd);
+void copy_cmd(char *cmd);
+void type_cmd(char *cmd);
 
 void formatInteger(unsigned n);
 void formatIntegerFigures(unsigned n);
@@ -81,6 +83,10 @@ void read_cmd(DIR *dir, char *cmd) {
     time_cmd(cmd);
   } else if (strcmp(cmdtok, "date") == 0) {
     date_cmd(cmd);
+  } else if (strcmp(cmdtok, "copy") == 0) {
+    copy_cmd(cmd);
+  } else if (strcmp(cmdtok, "type") == 0) {
+    type_cmd(cmd);
   }
 
 }
@@ -227,7 +233,7 @@ void mkdir_cmd(char *folder) {
 }
 
 void time_cmd(char *cmd){
-  char buff[32];
+  char buffer[32];
 
   cmd = strtok(NULL, " ");
   if(cmd != NULL) {
@@ -238,12 +244,12 @@ void time_cmd(char *cmd){
   time_t raw_time = time(NULL);
   struct tm * tm = localtime(&raw_time);
 
-  strftime(buff, sizeof(buff), "%X", tm);
-  printf("The current time is: %s\n", buff);
+  strftime(buffer, sizeof(buffer), "%X", tm);
+  printf("The current time is: %s\n", buffer);
 }
 
 void date_cmd(char *cmd){
-  char buff[32];
+  char buffer[32];
 
   cmd = strtok(NULL, " ");
   if(cmd != NULL) {
@@ -254,8 +260,75 @@ void date_cmd(char *cmd){
   time_t raw_time = time(NULL);
   struct tm * tm = localtime(&raw_time);
 
-  strftime(buff, sizeof(buff),  "%a %m/%d/%Y", tm);
-  printf("The current date is: %s\n", buff);
+  strftime(buffer, sizeof(buffer),  "%a %m/%d/%Y", tm);
+  printf("The current date is: %s\n", buffer);
+}
+
+void copy_cmd(char *cmd) {
+  char *cmd_src = strtok(NULL, " ");
+  char *cmd_dest = cmd_src + strlen(cmd_src) + 1;
+
+  cmd_dest = strtok(NULL, " ");
+  // char *cmd_dest = strtok(NULL, " ") + 1;
+  // char *cmd_dest = cmd_src + strlen(cmdtok) + 1;
+
+  if(cmd_src == NULL) {
+    printf("The syntax of the command is incorrect.\n");
+
+  } else if (cmd_dest == NULL){
+    printf("The file cannot be copied onto itself.\n");
+
+  } else {
+    char ch;
+    FILE *source_file, *dest_file;
+
+    source_file = fopen(cmd_src, "r");
+
+    if(source_file == NULL) {
+      printf("The system cannot find the file specified.\n");
+    } else {
+
+      if(strcmp(cmd_src, cmd_dest) == 0) {
+        printf("The file cannot be copied onto itself.\n");
+      } else {
+        dest_file = fopen(cmd_dest, "w");
+        ch = fgetc(source_file);
+        while (ch != EOF) {
+            fputc(ch, dest_file);
+            ch = fgetc(source_file);
+        }
+
+        printf("1 file(s) copied.\n");
+        fclose(dest_file);
+      }
+
+      fclose(source_file);
+    }
+  }
+}
+
+void type_cmd(char *cmd) {
+  char *cmd_filename = strtok(NULL, " ");
+
+  if(cmd_filename == NULL) {
+    printf("The syntax of the command is incorrect.\n");
+  } else {
+    FILE *file;
+    file = fopen(cmd_filename, "r");
+    if(!file) {
+      printf("The system cannot find the file specified.\n");
+    }
+
+    char buffer[10000];
+
+    while(fgets(buffer, sizeof(buffer), file)) {
+      printf("%s", buffer);
+    }
+    printf("\n");
+    fclose(file);
+  }
+
+
 }
 
 
