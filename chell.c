@@ -27,13 +27,18 @@
 #include <math.h>
 #include <time.h>
 
+#include <windows.h>
+
 char *trim(char *);
+
 void cls_cmd();
-void formatInteger(unsigned n);
-void formatIntegerFigures(unsigned n);
 void dir_cmd(DIR *dir);
 void mkdir_cmd(char *folder);
-void time_cmd();
+void time_cmd(char* cmd);
+void date_cmd(char *cmd);
+
+void formatInteger(unsigned n);
+void formatIntegerFigures(unsigned n);
 
 
 // Function to read user input and
@@ -73,7 +78,9 @@ void read_cmd(DIR *dir, char *cmd) {
     char *folder = cmd + strlen(cmdtok) + 1;
     mkdir_cmd(folder);
   } else if (strcmp(cmdtok, "time") == 0) {
-    time_cmd();
+    time_cmd(cmd);
+  } else if (strcmp(cmdtok, "date") == 0) {
+    date_cmd(cmd);
   }
 
 }
@@ -104,7 +111,42 @@ char *trim(char *str) {
 }
 
 void cls_cmd() {
-    system("@cls||clear");
+    // change
+    // system("@cls||clear");
+
+      HANDLE                     hStdOut;
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  DWORD                      count;
+  DWORD                      cellCount;
+  COORD                      homeCoords = { 0, 0 };
+
+  hStdOut = GetStdHandle( STD_OUTPUT_HANDLE );
+  if (hStdOut == INVALID_HANDLE_VALUE) return;
+
+  /* Get the number of cells in the current buffer */
+  if (!GetConsoleScreenBufferInfo( hStdOut, &csbi )) return;
+  cellCount = csbi.dwSize.X *csbi.dwSize.Y;
+
+  /* Fill the entire buffer with spaces */
+  if (!FillConsoleOutputCharacter(
+    hStdOut,
+    (TCHAR) ' ',
+    cellCount,
+    homeCoords,
+    &count
+    )) return;
+
+  /* Fill the entire buffer with the current colors and attributes */
+  if (!FillConsoleOutputAttribute(
+    hStdOut,
+    csbi.wAttributes,
+    cellCount,
+    homeCoords,
+    &count
+    )) return;
+
+  /* Move the cursor home */
+  SetConsoleCursorPosition( hStdOut, homeCoords );
 }
 
 void dir_cmd(DIR *dir) {
@@ -175,13 +217,45 @@ void mkdir_cmd(char *folder) {
     if (folder == NULL) {
       printf("usage: mkdir [-pv] [-m mode] directory ...\n");
     } else {
-        int mkdir_status = mkdir(folder, 0777);
+
+        int mkdir_status = mkdir(folder);           // Function for Windows
+        // int mkdir_status = mkdir(folder, 0777);  // Function for Mac
         if(mkdir_status != 0) {
             printf("Directory already exists.\n");
         }
-
-
     }
+}
+
+void time_cmd(char *cmd){
+  char buff[32];
+
+  cmd = strtok(NULL, " ");
+  if(cmd != NULL) {
+      printf("The system cannot accept the time entered.\n");
+      return;
+  }
+
+  time_t raw_time = time(NULL);
+  struct tm * tm = localtime(&raw_time);
+
+  strftime(buff, sizeof(buff), "%X", tm);
+  printf("The current time is: %s\n", buff);
+}
+
+void date_cmd(char *cmd){
+  char buff[32];
+
+  cmd = strtok(NULL, " ");
+  if(cmd != NULL) {
+      printf("The system cannot accept the time entered.\n");
+      return;
+  }
+
+  time_t raw_time = time(NULL);
+  struct tm * tm = localtime(&raw_time);
+
+  strftime(buff, sizeof(buff),  "%a %m/%d/%Y", tm);
+  printf("The current date is: %s\n", buff);
 }
 
 
@@ -191,10 +265,7 @@ int main(void) {
 
   DIR *dir;
 
-  int boolSample = 1;
-
-  while (boolSample < 4) {
-      printf("hello there");
+  while (1) {
       if (getcwd(cwd, sizeof(cwd)) != NULL) {
           input[0] != '\0';
           printf("%s>", cwd);
@@ -210,10 +281,6 @@ int main(void) {
           perror("Error: ");
           break;
       }
-
-      ++boolSample;
-
-
   }
 
   return(0);
