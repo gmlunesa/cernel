@@ -33,6 +33,7 @@ void formatInteger(unsigned n);
 void formatIntegerFigures(unsigned n);
 void dir_cmd(DIR *dir);
 void mkdir_cmd(char *folder);
+void time_cmd();
 
 
 // Function to read user input and
@@ -71,6 +72,8 @@ void read_cmd(DIR *dir, char *cmd) {
   } else if (strcmp(cmdtok, "mkdir") == 0) {
     char *folder = cmd + strlen(cmdtok) + 1;
     mkdir_cmd(folder);
+  } else if (strcmp(cmdtok, "time") == 0) {
+    time_cmd();
   }
 
 }
