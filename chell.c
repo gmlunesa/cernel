@@ -38,6 +38,7 @@ void time_cmd(char* cmd);
 void date_cmd(char *cmd);
 void copy_cmd(char *cmd);
 void type_cmd(char *cmd);
+void rename_cmd(char *cmd);
 
 void formatInteger(unsigned n);
 void formatIntegerFigures(unsigned n);
@@ -87,6 +88,8 @@ void read_cmd(DIR *dir, char *cmd) {
     copy_cmd(cmd);
   } else if (strcmp(cmdtok, "type") == 0) {
     type_cmd(cmd);
+  } else if (strcmp(cmdtok, "rename") == 0) {
+    rename_cmd(cmd);
   }
 
 }
@@ -120,7 +123,7 @@ void cls_cmd() {
     // change
     // system("@cls||clear");
 
-      HANDLE                     hStdOut;
+  HANDLE                     hStdOut;
   CONSOLE_SCREEN_BUFFER_INFO csbi;
   DWORD                      count;
   DWORD                      cellCount;
@@ -327,8 +330,25 @@ void type_cmd(char *cmd) {
     printf("\n");
     fclose(file);
   }
+}
 
+void rename_cmd(char *cmd) {
+  char *cmd_src = strtok(NULL, " ");
+  char *cmd_dest = cmd_src + strlen(cmd_src) + 1;
 
+  cmd_dest = strtok(NULL, " ");
+
+  if(cmd_src == NULL && cmd_dest == NULL) {
+    printf("The syntax of the command is incorrect.\n");
+  } else {
+    int rename_success = rename(cmd_src, cmd_dest);
+
+    if(rename_success == 0) {
+      printf("1 file(s) renamed.\n");
+    } else {
+      printf("The syntax of the command is incorrect.\n");
+    }
+  }
 }
 
 
