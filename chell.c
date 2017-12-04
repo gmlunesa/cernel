@@ -32,6 +32,7 @@ void cls_cmd();
 void formatInteger(unsigned n);
 void formatIntegerFigures(unsigned n);
 void dir_cmd(DIR *dir);
+void mkdir_cmd(char *folder);
 
 
 // Function to read user input and
@@ -67,6 +68,9 @@ void read_cmd(DIR *dir, char *cmd) {
     if (chdir(trim(cmd_dest)) != 0) {
       printf("The system cannot find the path specified.\n");
     }
+  } else if (strcmp(cmdtok, "mkdir") == 0) {
+    char *folder = cmd + strlen(cmdtok) + 1;
+    mkdir_cmd(folder);
   }
 
 }
@@ -117,7 +121,7 @@ void dir_cmd(DIR *dir) {
       stat(dirnt->d_name, &attr);
       time_info = localtime(&attr.st_mtime);
       strftime(buff, sizeof(buff), "%m/%d/%Y %I:%M %p", time_info);
-      printf(buff);
+      printf("%s", buff);
 
       if(S_ISDIR(attr.st_mode)) {
         printf("\t\t  <DIR>\t\t");
@@ -164,13 +168,30 @@ void formatIntegerFigures (unsigned n) {
   printf(",%03d", n%1000);
 }
 
+void mkdir_cmd(char *folder) {
+    if (folder == NULL) {
+      printf("usage: mkdir [-pv] [-m mode] directory ...\n");
+    } else {
+        int mkdir_status = mkdir(folder, 0777);
+        if(mkdir_status != 0) {
+            printf("Directory already exists.\n");
+        }
+
+
+    }
+}
+
+
 int main(void) {
   char cwd[1024];
   char input[1024];
 
   DIR *dir;
 
-  while (1) {
+  int boolSample = 1;
+
+  while (boolSample < 4) {
+      printf("hello there");
       if (getcwd(cwd, sizeof(cwd)) != NULL) {
           input[0] != '\0';
           printf("%s>", cwd);
@@ -186,6 +207,10 @@ int main(void) {
           perror("Error: ");
           break;
       }
+
+      ++boolSample;
+
+
   }
 
   return(0);
