@@ -273,6 +273,7 @@ int change_local_time(int hour, int minute, int second) {
   SetLocalTime(&sta);
 
   DWORD dword = GetLastError();
+  printf("%lu", dword);
   return (int) dword;
 }
 
@@ -297,45 +298,116 @@ int is_time_valid(char *cmd) {
   }
 }
 
+void print_time_results (int time_result) {
+    if (time_result == -1) {
+      printf("The system cannot accept the time entered.\n");
+      return;
+    } else if (time_result == 1314) {
+      printf("A required privilege is not held by the client.\n");
+    } else if (time_result == 0) {
+      printf("Time updated successfully.");
+    }
+
+}
+
 void time_cmd(char *cmd){
   char buffer[32];
+  char input[1024];
 
   cmd = strtok(NULL, " ");
   if(cmd != NULL) {
       int time_result = is_time_valid(cmd);
-      if (time_result == -1) {
-        printf("The system cannot accept the time entered.\n");
-        return;
-      } else if (time_result == 1314) {
-        printf("A required privilege is not held by the client.\n");
-      } else if (time_result == 0) {
-        printf("Time updated successfully.");
-      }
+      print_time_results(time_result);
+
 
   } else {
      time_t raw_time = time(NULL);
      struct tm * tm = localtime(&raw_time);
      strftime(buffer, sizeof(buffer), "%X", tm);
-     printf("The current time is: %s\n", buffer);
+     printf("The current time is: %s\nEnter the new time: ", buffer);
+
+     fflush(stdin);
+     scanf("%[^\n]", input);
+     if(input[0] != '\0'){
+        int time_result = is_time_valid(input);
+        print_time_results(time_result);
+
+     }
+
   }
 }
 
+int change_local_date(int month, int day, int year) {
+  SYSTEMTIME st, lt;
 
+  GetSystemTime(&st);
+  GetLocalTime(&lt);
+
+  printf("The system time is: %02d:%02d\n", st.wHour, st.wMinute);
+  printf(" The local time is: %02d:%02d\n", lt.wHour, lt.wMinute);
+
+  SYSTEMTIME sta;
+  sta.wYear = year;
+  sta.wMonth = month;
+  sta.wDayOfWeek = day;
+  sta.wDay = st.wDay;
+  sta.wHour = st.wHour;
+  sta.wMinute = st.wMinute;
+  sta.wSecond = st.wSecond;
+  sta.wMilliseconds = st.wMilliseconds ;
+
+  SetLocalTime(&sta);
+
+  DWORD dword = GetLastError();
+  printf("%lu", dword);
+  return (int) dword;
+
+}
+
+int is_date_valid(char *cmd) {
+  char *month = strtok(cmd, "/");
+  char *day = strtok(month + strlen(month) + 1, "/");
+  char *year = day + strlen(day) + 1;
+
+//  int hour = atoi (hour);
+  int month_int = atoi(month);
+  int day_int = atoi(day);
+  int year_int = atoi(year);
+
+
+  if (strlen(month) != 2 || strlen(day) != 2 || strlen(year) != 4) {
+    return -1;
+  } else if ((month_int < 0 && month_int > 12) || (day_int < 0 && day_int > 31) || (year_int < 1970)) {
+    return -1;
+  } else {
+    return change_local_date(month_int, day_int, year_int);
+  }
+}
 
 void date_cmd(char *cmd){
   char buffer[32];
+  char input[1024];
 
   cmd = strtok(NULL, " ");
   if(cmd != NULL) {
-      printf("The system cannot accept the time entered.\n");
-      return;
+    int time_result = is_date_valid(cmd);
+    print_time_results(time_result);
+    // printf("The system cannot accept the time entered.\n");
+    return;
+  } else {
+    time_t raw_time = time(NULL);
+    struct tm * tm = localtime(&raw_time);
+
+    strftime(buffer, sizeof(buffer),  "%a %m/%d/%Y", tm);
+    printf("The current date is: %s\nEnter new date (mm-dd-yy):", buffer);
+    fflush(stdin);
+    scanf("%[^\n]", input);
+    if(input[0] != '\0'){
+      int time_result = is_time_valid(input);
+      print_time_results(time_result);
+
+    }
   }
-
-  time_t raw_time = time(NULL);
-  struct tm * tm = localtime(&raw_time);
-
-  strftime(buffer, sizeof(buffer),  "%a %m/%d/%Y", tm);
-  printf("The current date is: %s\n", buffer);
 }
 
 void copy_cmd(char *cmd) {
