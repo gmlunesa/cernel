@@ -1,4 +1,4 @@
-/* Copyright [2017] [Goldy Mariz C. Lunesa]
+/* Copyright 2017 Goldy Mariz C. Lunesa
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,11 @@
 #include <time.h>
 
 #include <windows.h>
+#include <winbase.h>
+
+#define bool int
+#define true 1
+#define false 0
 
 char *trim(char *);
 
@@ -43,7 +48,7 @@ void type_cmd(char *cmd);
 void rename_cmd(char *cmd);
 void del_cmd(char *cmd);
 void move_cmd(char *cmd);
-void rmdir_cmd(const char *cmd);
+void rmdir_cmd(char *cmd);
 
 void formatInteger(unsigned n);
 void formatIntegerFigures(unsigned n);
@@ -100,8 +105,7 @@ void read_cmd(DIR *dir, char *cmd) {
   } else if (strcmp(cmdtok, "move") == 0) {
     move_cmd(cmd);
   } else if (strcmp(cmdtok, "rmdir") == 0) {
-    const char *const_cmd = cmd;
-    rmdir_cmd(const_cmd);
+    rmdir_cmd(cmd);
   }
 
 }
@@ -247,21 +251,76 @@ void mkdir_cmd(char *folder) {
     }
 }
 
+int change_local_time(int hour, int minute, int second) {
+  SYSTEMTIME st, lt;
+
+  GetSystemTime(&st);
+  GetLocalTime(&lt);
+
+  printf("The system time is: %02d:%02d\n", st.wHour, st.wMinute);
+  printf(" The local time is: %02d:%02d\n", lt.wHour, lt.wMinute);
+
+  SYSTEMTIME sta;
+  sta.wYear = st.wYear;
+  sta.wMonth = st.wMonth;
+  sta.wDayOfWeek = st.wDayOfWeek;
+  sta.wDay = st.wDay;
+  sta.wHour = hour;
+  sta.wMinute = minute;
+  sta.wSecond = second;
+  sta.wMilliseconds = st.wMilliseconds ;
+
+  SetLocalTime(&sta);
+
+  DWORD dword = GetLastError();
+  return (int) dword;
+}
+
+
+int is_time_valid(char *cmd) {
+  char *hour = strtok(cmd, ":");
+  char *minute = strtok(hour + strlen(hour) + 1, ":");
+  char *second = minute + strlen(minute) + 1;
+
+//  int hour = atoi (hour);
+  int hour_int = atoi(hour);
+  int minute_int = atoi(minute);
+  int second_int = atoi(second);
+
+
+  if (strlen(hour) != 2 || strlen(minute) != 2 || strlen(second) != 2) {
+    return -1;
+  } else if ((hour_int < 0 && hour_int > 23) || (minute_int < 0 && minute_int > 59) || (second_int < 0 && second_int > 59)) {
+    return -1;
+  } else {
+    return change_local_time(hour_int, minute_int, second_int);
+  }
+}
+
 void time_cmd(char *cmd){
   char buffer[32];
 
   cmd = strtok(NULL, " ");
   if(cmd != NULL) {
-      printf("The system cannot accept the time entered.\n");
-      return;
+      int time_result = is_time_valid(cmd);
+      if (time_result == -1) {
+        printf("The system cannot accept the time entered.\n");
+        return;
+      } else if (time_result == 1314) {
+        printf("A required privilege is not held by the client.\n");
+      } else if (time_result == 0) {
+        printf("Time updated successfully.");
+      }
+
+  } else {
+     time_t raw_time = time(NULL);
+     struct tm * tm = localtime(&raw_time);
+     strftime(buffer, sizeof(buffer), "%X", tm);
+     printf("The current time is: %s\n", buffer);
   }
-
-  time_t raw_time = time(NULL);
-  struct tm * tm = localtime(&raw_time);
-
-  strftime(buffer, sizeof(buffer), "%X", tm);
-  printf("The current time is: %s\n", buffer);
 }
+
+
 
 void date_cmd(char *cmd){
   char buffer[32];
@@ -436,7 +495,7 @@ void move_cmd(char *cmd) {
 
 }
 
-void rmdir_cmd(const char *cmd) {
+void rmdir_cmd(char *cmd) {
   char *cmd_dest = cmd + strlen(cmd) + 1;
    DIR *dir = opendir(cmd_dest);
 
