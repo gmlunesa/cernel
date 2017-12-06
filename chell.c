@@ -106,6 +106,8 @@ void read_cmd(DIR *dir, char *cmd) {
     move_cmd(cmd);
   } else if (strcmp(cmdtok, "rmdir") == 0) {
     rmdir_cmd(cmd);
+  } else {
+    printf("'%s' is not recognized as an internal or external command,\noperable program or batch file.\n", cmd);
   }
 
 }
@@ -415,8 +417,6 @@ void copy_cmd(char *cmd) {
   char *cmd_dest = cmd_src + strlen(cmd_src) + 1;
 
   cmd_dest = strtok(NULL, " ");
-  // char *cmd_dest = strtok(NULL, " ") + 1;
-  // char *cmd_dest = cmd_src + strlen(cmdtok) + 1;
 
   if(cmd_src == NULL) {
     printf("The syntax of the command is incorrect.\n");
@@ -440,14 +440,12 @@ void copy_cmd(char *cmd) {
         dest_file = fopen(cmd_dest, "w");
         ch = fgetc(source_file);
         while (ch != EOF) {
-            fputc(ch, dest_file);
-            ch = fgetc(source_file);
+          fputc(ch, dest_file);
+          ch = fgetc(source_file);
         }
-
         printf("1 file(s) copied.\n");
         fclose(dest_file);
       }
-
       fclose(source_file);
     }
   }
@@ -456,22 +454,56 @@ void copy_cmd(char *cmd) {
 void type_cmd(char *cmd) {
   char *cmd_filename = strtok(NULL, " ");
 
+  /* Add space for trailing token. */
+//   count += last_space < (cmd_filename + strlen(cmd_filename) - 1);
+
+
   if(cmd_filename == NULL) {
     printf("The syntax of the command is incorrect.\n");
   } else {
-    FILE *file;
-    file = fopen(cmd_filename, "r");
-    if(!file) {
-      printf("The system cannot find the file specified.\n");
+    char *temp = cmd_filename;
+    int count = 1;
+
+    int length = strlen(temp);
+    int running = 1;
+
+    while(running) {
+      temp = temp + length + 1;
+      length = length + strlen(temp);
+
+      if ((temp = strtok(NULL, " ")) == NULL) {
+        running = 0;
+      } else {
+        ++count;
+      }
     }
 
-    char buffer[10000];
+    while (count) {
 
-    while(fgets(buffer, sizeof(buffer), file)) {
-      printf("%s", buffer);
+      FILE *file;
+      file = fopen(cmd_filename, "r");
+
+      if(!file) {
+        printf("Error occurred while processing: %s\n", cmd_filename);
+
+      }
+
+      char buffer[10000];
+
+      printf("%s\n", cmd_filename);
+
+      while(fgets(buffer, sizeof(buffer), file)) {
+        printf("%s", buffer);
+      }
+      printf("\n\n");
+      fclose(file);
+
+      cmd_filename = cmd_filename + strlen(cmd_filename) + 1;
+      --count;
+
     }
-    printf("\n");
-    fclose(file);
+
+
   }
 }
 
@@ -501,21 +533,51 @@ void del_cmd(char *cmd) {
   if(cmd_filename == NULL) {
     printf("The syntax of the command is incorrect.\n");
   } else {
-    FILE *file;
-    file = fopen(cmd_filename, "r");
 
-    if(file) {
-      fclose(file);
-      int remove_success = remove(cmd_filename);
+    char *temp = cmd_filename;
+    int count = 1;
 
-      if(remove_success == 0) {
-        printf("1 file(s) deleted.\n");
+    int length = strlen(temp);
+    int running = 1;
+
+    int delete_count = 0;
+
+    while(running) {
+      temp = temp + length + 1;
+      length = length + strlen(temp);
+
+      if ((temp = strtok(NULL, " ")) == NULL) {
+        running = 0;
       } else {
-        printf("Could not delete file %s\n", cmd_filename);
+        ++count;
       }
-    } else {
-      printf("Could Not Find %s \n", cmd_filename);
     }
+
+    while (count) {
+      FILE *file;
+      file = fopen(cmd_filename, "r");
+
+      if(file) {
+        fclose(file);
+        int remove_success = remove(cmd_filename);
+
+        if(remove_success == 0) {
+          ++delete_count;
+        } else {
+          printf("Could not delete file %s\n", cmd_filename);
+        }
+      } else {
+        printf("Could Not Find %s \n", cmd_filename);
+      }
+
+      cmd_filename = cmd_filename + strlen(cmd_filename) + 1;
+      --count;
+
+    }
+
+    printf("%d file(s) deleted.\n", delete_count);
+
+
   }
 
 }
@@ -539,14 +601,21 @@ void move_cmd(char *cmd) {
     } else {
 
       // Copy the file to another directory
+
+      strcat(cmd_dest, "/");
+
+      strcat(cmd_dest, cmd_src);
       dest_file = fopen(cmd_dest, "w");
+
       ch = fgetc(source_file);
       while (ch != EOF) {
           fputc(ch, dest_file);
           ch = fgetc(source_file);
       }
 
-      printf("1 file(s) copied.\n");
+      printf(cmd_dest);
+
+      // printf("1 file(s) copied.\n");
       fclose(dest_file);
 
       fclose(source_file);
