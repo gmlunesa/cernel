@@ -38,6 +38,8 @@
 
 char *trim(char *);
 
+void cd_cmd(char *cmd, char *cmdtok);
+void chdir_cmd(char *cmd, char *cmdtok);
 void cls_cmd();
 void dir_cmd(DIR *dir);
 void mkdir_cmd(char *folder);
@@ -66,27 +68,13 @@ void read_cmd(DIR *dir, char *cmd) {
   } else if (strcmp(cmdtok, "cls") == 0) {
     cls_cmd();
   } else if (strcmp(cmdtok, "cd") == 0) {
-    char *cmd_dest = cmd + strlen(cmdtok) + 1;
-
-    char *dest_null = strtok(NULL, " ");
-
-    if (dest_null == NULL) {
-      char cwd[1024];
-      getcwd(cwd, sizeof(cwd));
-      printf("%s\n", cwd);
-    } else if (chdir(trim(cmd_dest)) != 0) {
-        printf("The system cannot find the path specified.\n");
-    }
-  } else if (strcmp(cmdtok, "cd..") == 0) { // special case
+    cd_cmd(cmd, cmdtok);
+  } else if (strcmp(cmdtok, "cd..") == 0) {
     chdir("..");
   } else if (strcmp(cmdtok, "dir") == 0) {
     dir_cmd(dir);
   } else if (strcmp(cmdtok, "chdir") == 0) {
-
-    char *cmd_dest = cmd + strlen(cmdtok) + 1;
-    if (chdir(trim(cmd_dest)) != 0) {
-      printf("The system cannot find the path specified.\n");
-    }
+    chdir_cmd(cmd, cmdtok);
   } else if (strcmp(cmdtok, "mkdir") == 0) {
     char *folder = cmd + strlen(cmdtok) + 1;
     mkdir_cmd(folder);
@@ -110,6 +98,28 @@ void read_cmd(DIR *dir, char *cmd) {
     printf("'%s' is not recognized as an internal or external command,\noperable program or batch file.\n", cmd);
   }
 
+}
+
+void cd_cmd(char *cmd, char *cmdtok) {
+  char *cmd_dest = cmd + strlen(cmdtok) + 1;
+
+  char *dest_null = strtok(NULL, " ");
+
+  if (dest_null == NULL) {
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    printf("%s\n", cwd);
+  } else if (chdir(trim(cmd_dest)) != 0) {
+      printf("The system cannot find the path specified.\n");
+  }
+
+}
+
+void chdir_cmd(char *cmd, char *cmdtok) {
+  char *cmd_dest = cmd + strlen(cmdtok) + 1;
+  if (chdir(trim(cmd_dest)) != 0) {
+    printf("The system cannot find the path specified.\n");
+  }
 }
 
 // Function to trim unnecessary spaces
@@ -690,22 +700,21 @@ void rmdir_cmd(char *cmd) {
   char *cmd_dest = cmd + strlen(cmd) + 1;
    DIR *dir = opendir(cmd_dest);
 
-   printf("Here");
    if (dir != NULL) {
      // printf(dir);
-     closedir(dir);
-        int response = rmdir(cmd_dest);
-        if (response) {
-            printf("The directory is not empty.\n\n");
-        }
+    closedir(dir);
+    int response = rmdir(cmd_dest);
+    if (response) {
+      printf("The directory is not empty.\n\n");
+    } else {
+      printf("Successfully removed directory.");
+    }
    } else {
      // printf(dir);
      printf(cmd_dest);
      printf("The system cannot find the file specified.\n");
    }
 }
-
-
 
 int main(void) {
   char cwd[1024];
@@ -714,21 +723,21 @@ int main(void) {
   DIR *dir;
 
   while (1) {
-      if (getcwd(cwd, sizeof(cwd)) != NULL) {
-          input[0] != '\0';
-          printf("%s>", cwd);
-          fflush(stdin);
-          scanf("%[^\n]", input);
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+      input[0] != '\0';
+      printf("%s>", cwd);
+      fflush(stdin);
+      scanf("%[^\n]", input);
 
-          if(input[0] != '\0'){
-              read_cmd(dir, input);
-          }
-
-          printf("\n");
-      } else {
-          perror("Error: ");
-          break;
+      if(input[0] != '\0'){
+        read_cmd(dir, input);
       }
+
+      printf("\n");
+    } else {
+      perror("Error: ");
+      break;
+    }
   }
 
   return(0);
