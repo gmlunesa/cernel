@@ -412,6 +412,39 @@ void date_cmd(char *cmd){
   }
 }
 
+char *extract_filename(char *cmd) {
+  int filename_idx = 0;
+  int i = strlen(cmd) - 1;
+  char filename[128];
+
+  for (; i >= 0; i--){
+    if(cmd[i] == '/') {
+      filename_idx = i;
+      break;
+    }
+  }
+
+  i = filename_idx + 1;
+  int j = 0;
+  for(; i < strlen(cmd); i++, j++) {
+    filename[j] = cmd[i];
+  }
+
+  filename[j] = '\0';
+
+  return filename;
+}
+
+int is_file_specific (char *cmd) {
+  int i = 0;
+  for (; i < strlen(cmd); i++) {
+    if(cmd[i] == '.') {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 void copy_cmd(char *cmd) {
   char *cmd_src = strtok(NULL, " ");
   char *cmd_dest = cmd_src + strlen(cmd_src) + 1;
@@ -437,6 +470,18 @@ void copy_cmd(char *cmd) {
       if(strcmp(cmd_src, cmd_dest) == 0) {
         printf("The file cannot be copied onto itself.\n");
       } else {
+
+        if (!is_file_specific(cmd_dest)) {
+          char *new_file = extract_filename(cmd_src);
+
+          if (cmd_dest[strlen(cmd_dest) - 1] == '/') {
+            strcat(cmd_dest, new_file);
+          } else {
+            strcat(cmd_dest, "/");
+            strcat(cmd_dest, new_file);
+          }
+        }
+
         dest_file = fopen(cmd_dest, "w");
         ch = fgetc(source_file);
         while (ch != EOF) {
@@ -601,10 +646,15 @@ void move_cmd(char *cmd) {
     } else {
 
       // Copy the file to another directory
+      char *new_file = extract_filename(cmd_src);
 
-      strcat(cmd_dest, "/");
+      if (cmd_dest[strlen(cmd_dest) - 1] == '/') {
+        strcat(cmd_dest, new_file);
+      } else {
+        strcat(cmd_dest, "/");
+        strcat(cmd_dest, new_file);
+      }
 
-      strcat(cmd_dest, cmd_src);
       dest_file = fopen(cmd_dest, "w");
 
       ch = fgetc(source_file);
