@@ -61,8 +61,6 @@ void print_time_results (int time_result);
 int is_time_valid(char *cmd);
 int change_local_time(int hour, int minute, int second);
 
-
-
 int main(void) {
   char cwd[1024];
   char input[1024];
@@ -163,9 +161,14 @@ void cd_cmd(char *cmd, char *cmdtok) {
 
 void chdir_cmd(char *cmd, char *cmdtok) {
   char *cmd_dest = cmd + strlen(cmdtok) + 1;  // Extract desination string token
+  char *is_args_null = strtok(NULL, " ");     // NULL pointer checkpoint
 
-  // If system was able to change directory
-  if (chdir(trim(cmd_dest)) != 0) {
+  // If destination directory specified or not
+  if (is_args_null == NULL) {
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));                 // get current working directory
+    printf("%s\n", cwd);                      // print current working directory
+  } else if (chdir(trim(cmd_dest)) != 0) {
     printf("The system cannot find the path specified.\n");     // System error on unlocatable path
   }
 }
@@ -414,12 +417,12 @@ void print_time_results (int time_result) {
 
   // Print error or success messages
   if (time_result == -1) {
-    printf("The system cannot accept the time entered.\n");
+    printf("The system cannot accept the time/date entered.\n");
     return;
   } else if (time_result == 1314) {
     printf("A required privilege is not held by the client.\n");
   } else if (time_result == 0) {
-    printf("Time updated successfully.");
+    printf("Time/date updated successfully.");
   }
 }
 
@@ -538,7 +541,7 @@ void date_cmd(char *cmd){
     fflush(stdin);
     scanf("%[^\n]", input);
     if(input[0] != '\0'){
-      int time_result = is_time_valid(input);
+      int time_result = is_date_valid(input);
       print_time_results(time_result);
 
     }
@@ -721,12 +724,17 @@ void rename_cmd(char *cmd) {
     printf("The syntax of the command is incorrect.\n");
   } else {
     // Rename files
-    int rename_success = rename(cmd_src, cmd_new);
+    struct stat buffer;
+    if(stat (cmd_new, &buffer) != 0) {
+      int rename_success = rename(cmd_src, cmd_new);
 
-    if(rename_success == 0) {
-      printf("1 file(s) renamed.\n");
+      if(rename_success == 0) {
+        printf("1 file(s) renamed.\n");
+      } else {
+        printf("The syntax of the command is incorrect.\n");
+      }
     } else {
-      printf("The syntax of the command is incorrect.\n");
+      printf("Error renaming file, please try again.\n");
     }
   }
 }
